@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+        h1 {
+            color: #4CAF50;
+            font-size: 2rem;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        .phone-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .phone-container input {
+            width: 30%;
+        }
+        .phone-container input[name="phone_number"] {
+            width: 70%;
+        }
+        .dropdown-container {
+            position: relative;
+        }
+        .dropdown {
+            position: absolute;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            display: none;
+            z-index: 1000;
+        }
+        .dropdown input {
+            width: 95%;
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        .dropdown div {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .dropdown div:hover {
+            background-color: #f1f1f1;
+        }
+        .error {
+            color: red;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create Your Account</h1>
+        <form id="signupForm" action="/signup" method="POST" onsubmit="return validateSignupForm()">
+            <h2>Sign Up</h2>
+            <input type="text" name="first_name" placeholder="First Name" required><br>
+            <input type="text" name="last_name" placeholder="Last Name" required><br>
+            <input type="date" name="dob" required><br>
+            <div class="dropdown-container">
+                <input type="text" id="countrySearch" placeholder="Select Country" readonly>
+                <div id="countryDropdown" class="dropdown">
+                    <input type="text" id="searchInput" placeholder="Search country...">
+                    <div id="dropdownOptions"></div>
+                </div>
+                <input type="hidden" name="country" id="country">
+            </div>
+            <div class="phone-container">
+                <input type="text" name="countryCode" id="countryCode" placeholder="+Code" required>
+                <input type="text" name="phone_number" placeholder="Phone Number" maxlength="10" required>
+            </div>
+
+            <select name="gender" required>
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+            </select><br>
+            <input type="email" name="email" placeholder="Email" required><br>
+            <input type="password" name="password" placeholder="Password" required><br>
+            <div id="error-message" class="error"></div>
+            <button type="submit">Create Account</button>
+        </form>
+
+        <p>Already have an account? <a href="/onlylogin">Login here</a></p>
+    </div>
+
+    <script>
+        let countryList = [];
+
+        async function fetchCountries() {
+            try {
+                const response = await fetch("https://restcountries.com/v3.1/all");
+                const data = await response.json();
+
+                countryList = data.map(country => ({
+                    name: country.name.common,
+                    code: country.idd.root + (country.idd.suffixes ? country.idd.suffixes[0] : "")
+                })).sort((a, b) => a.name.localeCompare(b.name));
+
+                updateDropdown(countryList.slice(0, 5)); 
+            } catch (error) {
+                console.error("Error fetching countries:", error);
+            }
+        }
+
+        function updateDropdown(countries) {
+            const dropdownOptions = document.getElementById("dropdownOptions");
+            dropdownOptions.innerHTML = "";
+
+            countries.forEach(country => {
+                const option = document.createElement("div");
+                option.textContent = country.name;
+                option.dataset.code = country.code;
+                option.onclick = () => selectCountry(country.name, country.code);
+                dropdownOptions.appendChild(option);
+            });
+        }
+
+        function selectCountry(name, code) {
+            document.getElementById("countrySearch").value = name;
+            document.getElementById("country").value = name;
+            document.getElementById("countryCode").value = code || ""; 
+            document.getElementById("countryDropdown").style.display = "none";
+        }
+
+        document.getElementById("countrySearch").addEventListener("focus", function () {
+            document.getElementById("countryDropdown").style.display = "block";
+            updateDropdown(countryList.slice(0, 5)); 
+        });
+
+        document.getElementById("searchInput").addEventListener("input", function () {
+            const searchTerm = this.value.toLowerCase();
+            const filteredCountries = countryList.filter(country => country.name.toLowerCase().includes(searchTerm));
+            updateDropdown(filteredCountries.slice(0, 10)); 
+        });
+
+        document.addEventListener("click", function (event) {
+            if (!event.target.closest(".dropdown-container")) {
+                document.getElementById("countryDropdown").style.display = "none";
+            }
+        });
+
+        function validateSignupForm() {
+            const phoneNumber = document.querySelector('input[name="phone_number"]').value;
+            const countryCode = document.querySelector('input[name="countryCode"]').value.trim();
+            const errorMessage = document.getElementById("error-message");
+
+            if (!/^\d{10}$/.test(phoneNumber)) {
+                errorMessage.textContent = "Phone number must be exactly 10 digits!";
+                return false;
+            }
+
+            const validCountryCodes = countryList.map(c => c.code);
+            if (!validCountryCodes.includes(countryCode)) {
+                errorMessage.textContent = "Invalid country code! Please select a valid one.";
+                return false;
+            }
+
+            errorMessage.textContent = "";
+            return true;
+        }
+
+        window.onload = fetchCountries;
+    </script>
+</body>
+</html>

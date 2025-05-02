@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Answer Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+            max-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        .scrollable-content {
+            overflow-y: auto;
+            flex: 1;
+            margin-bottom: 20px;
+        }
+        .answer {
+            font-weight: bold;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+
+        .top-right-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .top-right-buttons button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 5px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        .top-right-buttons button:hover {
+            background-color: #45a049;
+        }
+        .profile-logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ddd;
+            object-fit: cover;
+        }
+        #dropdown {
+            display: none;
+            position: absolute;
+            top: 120px;
+            right: 10px;
+            background-color: #45a049;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        #dropdown button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            text-align: left;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        #dropdown button:hover {
+            background-color: #45a049;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: 300px;
+        }
+        .modal button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .modal button.cancel {
+            background-color: #f44336;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+</head>
+<body>
+    <div class="top-right-buttons">
+        {% if user %}
+
+            <img id="profileLogo" src="{{ user.profile_image if user.profile_image else default_logo }}" alt="Profile Logo" class="profile-logo" onclick="toggleDropdown()">
+            <div id="dropdown" style="display: none;">
+                <button onclick="showLogoutConfirmation()">Logout</button>
+                <button onclick="showChangeLogoModal()">Change Logo</button>
+            </div>
+        {% else %}
+            
+            <button onclick="window.location.href='/onlylogin'">Login</button>
+            <button onclick="window.location.href='/signup'">Sign Up</button>
+        {% endif %}
+    </div>
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <p>Are you sure you want to logout?</p>
+            <button onclick="logout()">Yes</button>
+            <button class="cancel" onclick="closeModal()">No</button>
+        </div>
+    </div>
+
+    <div id="changeLogoModal" class="modal">
+        <div class="modal-content">
+            <p>Upload and crop your profile picture:</p>
+            <input type="file" id="logoUpload" accept="image/*">
+            <div id="imagePreview" style="margin: 20px 0; display: none;">
+                <img id="cropperImage" src="#" alt="Preview" style="max-width: 100%;">
+            </div>
+            <button id="uploadButton" style="display: none;" onclick="uploadLogo()">Upload</button>
+            <button class="cancel" onclick="closeChangeLogoModal()">Cancel</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Your Answer</h1>
+        <p><strong>Question:</strong> {{ question }}</p>
+        <p><strong>Answer:</strong></p>
+
+        <div class="scrollable-content">
+            <div class="answer">{{ formatted_output }}</div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Estimation (Hours)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if answer %}
+                        {% for epic in answer.epics %}
+                            <tr style="background-color: #187693d4;">
+                                <td>Epic</td>
+                                <td>{{ epic.title }}</td>
+                                <td>{{ epic.description }}</td>
+                                <td>{{ epic.estimation }}</td>
+                            </tr>
+                            
+                            {% for story in epic.stories %}
+                                <tr style="background-color: #e81b1b66;">
+                                    <td>Story</td>
+                                    <td>{{ story.title }}</td>
+                                    <td>{{ story.description }}</td>
+                                    <td>{{ story.estimation }}</td>
+                                </tr>
+                                
+                                {% for task in story.tasks %}
+                                    <tr style="background-color: #afdc1a3a;">
+                                        <td>Task</td>
+                                        <td>{{ task.title }}</td>
+                                        <td>{{ task.description }}</td>
+                                        <td>{{ task.estimation }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4">No answer available</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Ask another question:</h2>
+        <form action="/submit" method="post">
+            <label for="new_question">New Question:</label><br>
+            <textarea id="new_question" name="question" rows="5" style="width: 100%;" required></textarea><br>
+            <button type="submit">Submit New Question</button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <script>
+        let cropper;
+
+        function toggleDropdown() {
+            let dropdown = document.getElementById("dropdown");
+            dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+        }
+
+        function showLogoutConfirmation() {
+            document.getElementById("logoutModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("logoutModal").style.display = "none";
+        }
+
+        function logout() {
+            window.location.href = "/";
+        }
+
+        function showChangeLogoModal() {
+            document.getElementById("changeLogoModal").style.display = "flex";
+        }
+
+        function closeChangeLogoModal() {
+            document.getElementById("changeLogoModal").style.display = "none";
+            if (cropper) {
+                cropper.destroy();
+            }
+            document.getElementById("imagePreview").style.display = "none";
+            document.getElementById("uploadButton").style.display = "none";
+        }
+
+        document.getElementById("logoUpload").addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const imagePreview = document.getElementById("imagePreview");
+                    const cropperImage = document.getElementById("cropperImage");
+                    imagePreview.style.display = "block";
+                    cropperImage.src = e.target.result;
+
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    cropper = new Cropper(cropperImage, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        autoCropArea: 1,
+                    });
+
+                    document.getElementById("uploadButton").style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function uploadLogo() {
+            if (cropper) {
+                const croppedCanvas = cropper.getCroppedCanvas();
+                const croppedImage = croppedCanvas.toDataURL("image/jpeg");
+
+                fetch(croppedImage)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        const formData = new FormData();
+                        formData.append("profile_image", blob, "profile.jpg");
+
+                        fetch("/upload-profile-image", {
+                            method: "POST",
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === "success") {
+                                const profileLogo = document.getElementById("profileLogo");
+                                profileLogo.src = data.imagePath;
+                                closeChangeLogoModal();
+                            } else {
+                                alert("Error uploading image: " + (data.message || "Unknown error"));
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("An error occurred while uploading the image.");
+                        });
+                    });
+            } else {
+                alert("Please select and crop an image first.");
+            }
+        }
+    </script>
+</body>
+</html>

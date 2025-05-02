@@ -1,0 +1,181 @@
+<html>
+<head>
+    <title>EPIC GENERATOR</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative; 
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            transition: filter 0.3s ease;
+        }
+        .container.blur {
+            filter: blur(20px); 
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        label {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error-message {
+            color: red;
+            font-size: 0.9rem;
+            display: none;
+            margin-top: 5px;
+        }
+        .top-right-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .top-right-buttons button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 5px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        .top-right-buttons button:hover {
+            background-color: #45a049;
+        }
+
+        .top-right-buttons.blur {
+            filter: blur(5px); 
+        }
+        .login-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+            z-index: 1000;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-right-buttons">
+        <button onclick="window.location.href='/onlylogin'">Login</button>
+        <button onclick="window.location.href='/signup'">Sign Up</button>
+    </div>
+
+    <div class="container" id="questionContainer">
+        <h1>PASTE YOUR RESPONSE HERE</h1>
+        <form id="questionForm" action="/submit" method="post" onsubmit="return validateForm()">
+            <label for="question"></label><br>
+            <textarea id="question" name="question" rows="5" cols="30" required></textarea><br>
+            <span class="error-message" id="error-message">Please enter a valid question.</span><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div class="login-popup" id="loginPopup">
+        <span class="close-btn" onclick="closeLoginPopup()">×</span>
+        <h1>Welcome to ZEstimator App</h1>
+        <form id="loginForm" action="/onlylogin" method="POST" onsubmit="return validateLoginForm()">
+            <h2>Login</h2>
+            <input type="email" name="email" id="email" placeholder="Email" required><br>
+            <input type="password" name="password" id="password" placeholder="Password" required><br>
+            <div id="login-error-message" class="error"></div>
+            <button type="submit">Login</button>
+        </form>
+        <p>Don't have an account? <a href="/signup">Sign up here</a></p>
+    </div>
+
+    <script>
+        function validateForm() {
+            var question = document.getElementById("question").value;
+            if (question.trim() === "") {
+                document.getElementById("error-message").style.display = "block";
+                return false;
+            }
+            return true;
+        }
+
+        function validateLoginForm() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const errorMessage = document.getElementById("login-error-message");
+
+            if (!email || !password) {
+                errorMessage.textContent = "Both email and password are required!";
+                return false;
+            }
+            errorMessage.textContent = "";
+            return true;
+        }
+
+        function showLoginPopup() {
+            document.getElementById("questionContainer").classList.add("blur"); 
+            document.querySelector(".top-right-buttons").classList.add("blur"); 
+            document.getElementById("loginPopup").style.display = "block"; 
+        }
+
+        function closeLoginPopup() {
+            document.getElementById("questionContainer").classList.remove("blur"); 
+            document.querySelector(".top-right-buttons").classList.remove("blur"); 
+            document.getElementById("loginPopup").style.display = "none"; 
+        }
+
+        setTimeout(showLoginPopup, 2000); 
+    </script>
+</body>
+</html>

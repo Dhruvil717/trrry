@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Answer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        .formatted-output {
+            white-space: pre-wrap;
+            font-family: monospace;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .epic-row {
+            background-color: #187693d4;
+        }
+        .story-row {
+            background-color: #e81b1b66;
+        }
+        .task-row {
+            background-color: #afdc1a3a;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .top-right-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .top-right-buttons button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 5px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        .top-right-buttons button:hover {
+            background-color: #45a049;
+        }
+        .profile-logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ddd;
+            object-fit: cover;
+        }
+        #dropdown {
+            display: none;
+            position: absolute;
+            top: 120px;
+            right: 10px;
+            background-color: #45a049;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        #dropdown button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            text-align: left;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        #dropdown button:hover {
+            background-color: #45a049;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: 300px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="top-right-buttons">
+        {% if request.session.user %}
+            <img id="profileLogo" src="{{ request.session.user.profile_image if request.session.user.profile_image else 'https://via.placeholder.com/100' }}" alt="Profile Logo" class="profile-logo" onclick="toggleDropdown()">
+            <div id="dropdown" style="display: none;">
+                <button onclick="showLogoutConfirmation()">Logout</button>
+                <button onclick="showChangeLogoModal()">Change Logo</button>
+            </div>
+        {% else %}
+            <button onclick="window.location.href='/onlylogin'">Login</button>
+            <button onclick="window.location.href='/signup'">Sign Up</button>
+        {% endif %}
+    </div>
+    
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <p>Are you sure you want to logout?</p>
+            <button onclick="logout()">Yes</button>
+            <button class="cancel" onclick="closeModal()">No</button>
+        </div>
+    </div>
+    
+    <div id="changeLogoModal" class="modal">
+        <div class="modal-content">
+            <p>Upload and crop your profile picture:</p>
+            <input type="file" id="logoUpload" accept="image/*">
+            <div id="imagePreview" style="margin: 20px 0; display: none;">
+                <img id="cropperImage" src="#" alt="Preview" style="max-width: 100%;">
+            </div>
+            <button id="uploadButton" style="display: none;" onclick="uploadLogo()">Upload</button>
+            <button class="cancel" onclick="closeChangeLogoModal()">Cancel</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1>Answer from Uploaded File</h1>
+        
+        <div id="formattedOutput" class="formatted-output"></div>
+        
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Estimation (Hours)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        
+        <h3>Ask a follow-up question:</h3>
+        <textarea id="followUpQuestion" rows="5" placeholder="Type your follow-up question here..."></textarea>
+        <button onclick="submitFollowUp()">Submit </button>
+    </div>
+
+    <script>
+        const responseData = JSON.parse(sessionStorage.getItem('fileResponse'));
+        
+        if (responseData) {
+            document.getElementById('formattedOutput').textContent = responseData.formatted_output;
+
+            if (responseData.structured_data && responseData.structured_data.epics) {
+                const tbody = document.querySelector('#dataTable tbody');
+                
+                responseData.structured_data.epics.forEach(epic => {
+
+                    const epicRow = tbody.insertRow();
+                    epicRow.className = 'epic-row';
+                    epicRow.innerHTML = `
+                        <td>Epic</td>
+                        <td>${epic.title}</td>
+                        <td>${epic.description}</td>
+                        <td>${epic.estimation}</td>
+                    `;
+                    
+                    epic.stories.forEach(story => {
+                        const storyRow = tbody.insertRow();
+                        storyRow.className = 'story-row';
+                        storyRow.innerHTML = `
+                            <td>Story</td>
+                            <td>${story.title}</td>
+                            <td>${story.description}</td>
+                            <td>${story.estimation}</td>
+                        `;
+
+                        story.tasks.forEach(task => {
+                            const taskRow = tbody.insertRow();
+                            taskRow.className = 'task-row';
+                            taskRow.innerHTML = `
+                                <td>Task</td>
+                                <td>${task.title}</td>
+                                <td>${task.description}</td>
+                                <td>${task.estimation}</td>
+                            `;
+                        });
+                    });
+                });
+            }
+        } else {
+            document.getElementById('formattedOutput').textContent = "No response data found.";
+        }
+        
+        async function submitFollowUp() {
+            const question = document.getElementById('followUpQuestion').value;
+            if (question.trim() === "") {
+                alert("Please enter a question.");
+                return;
+            }
+    
+            try {
+
+                const previousResponse = JSON.parse(sessionStorage.getItem('fileResponse'));
+                const previousOutput = previousResponse?.formatted_output || "";
+
+                const submitBtn = document.querySelector('button');
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Processing...";
+
+                const response = await fetch("/submit-file-followup", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        previous_output: previousOutput
+                    })
+                });
+    
+                if (!response.ok) {
+                    throw new Error("Failed to process follow-up question");
+                }
+    
+                const data = await response.json();
+
+                sessionStorage.setItem('fileResponse', JSON.stringify({
+                    formatted_output: data.formatted_output,
+                    structured_data: data.answer
+                }));
+     
+                window.location.reload();
+    
+            } catch (error) {
+                console.error(error);
+                alert("Error processing follow-up: " + error.message);
+            } finally {
+                const submitBtn = document.querySelector('button');
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Submit Follow-up";
+            }
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+    
+        function showLogoutConfirmation() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+    
+        function closeModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+    
+        function logout() {
+            window.location.href = "/logout";
+        }
+    
+        function showChangeLogoModal() {
+            document.getElementById('changeLogoModal').style.display = 'flex';
+        }
+    
+        function closeChangeLogoModal() {
+            document.getElementById('changeLogoModal').style.display = 'none';
+        }
+
+        document.getElementById('logoUpload')?.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const image = document.getElementById('cropperImage');
+                    image.src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                    document.getElementById('uploadButton').style.display = 'inline-block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    
+        function uploadLogo() {
+            alert("Upload logic to be implemented.");
+            closeChangeLogoModal();
+        }
+    </script>
+</body>
+</html>

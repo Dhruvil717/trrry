@@ -1,0 +1,820 @@
+<html>
+    <head>
+        <title>EPIC GENERATOR</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f4f4f9;
+                color: #333;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+            .container {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                width: 90%;
+                max-width: 600px;
+            }
+            h1 {
+                text-align: center;
+                color: #4CAF50;   
+            }
+            label {
+                font-size: 1rem;
+                font-weight: bold;
+                color: #555;
+            }
+            textarea {
+                width: 100%;
+                padding: 10px;
+                font-size: 1rem;
+                border: 2px solid #ddd;
+                border-radius: 5px;
+                box-sizing: border-box;
+                resize: vertical;
+            }
+            button {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px 20px;
+                font-size: 1rem;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                width: 100%;
+                margin-top: 10px;
+                transition: background-color 0.3s;
+            }
+            button:hover {
+                background-color: #45a049;
+            }
+            .error-message {
+                color: red;
+                font-size: 0.9rem;
+                display: none;
+                margin-top: 5px;
+            }
+
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+            .modal-content {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                text-align: center;
+                width: 300px;
+            }
+            .modal button {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px 20px;
+                font-size: 1rem;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                margin: 5px;
+            }
+            .modal button.cancel {
+                background-color: #f44336;
+            }
+
+            .profile-logo {
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                cursor: pointer;
+                border: 2px solid #ddd;
+                object-fit: cover;
+            }
+
+            .chat-button {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                cursor: pointer;
+                border: 2px solid #ddd;
+                object-fit: cover;
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background-color: #4CAF50;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -300px;
+                width: 300px;
+                height: 100%;
+                background-color: #fff;
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+                transition: left 0.3s ease;
+                z-index: 1000;
+            }
+            .sidebar.open {
+                left: 0;
+            }
+            .sidebar-header {
+                padding: 20px;
+                border-bottom: 1px solid #ddd;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .sidebar-header h2 {
+                margin: 0;
+                color: #4CAF50;
+            }
+            .sidebar-header .close-btn {
+                background-color: #f44336;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 25px;
+                height: 25px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 12px;
+            }
+            .sidebar-content {
+                padding: 20px;
+            }
+            .sidebar-content ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+            .sidebar-content ul li {
+                padding: 10px;
+                cursor: pointer;
+                border-bottom: 1px solid #ddd;
+            }
+            .sidebar-content ul li:hover {
+                background-color: #f1f1f1;
+            }
+            .chat-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+                cursor: pointer;
+                position: relative; 
+            }
+
+            .chat-item:hover .edit-icon {
+                display: inline-block;
+            }
+
+            .edit-icon {
+                display: none;
+                cursor: pointer;
+                margin-left: 10px;
+                font-size: 1rem;
+            }
+
+            .edit-dropdown {
+                display: none;
+                position: absolute;
+                top: 100%; 
+                left: 0;
+                background-color: white;
+                border: 1px solid #ddd;
+                padding: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                width: 150px;
+            }
+
+            .edit-dropdown button {
+                display: block;
+                width: 100%;
+                padding: 8px;
+                margin-bottom: 5px;
+                text-align: center;
+                background-color: #4CAF50; 
+                color: white; 
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            
+            .edit-dropdown button:hover {
+                background-color: #45a049;
+            }
+            
+            .confirmation-modal {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+            }
+
+            .confirmation-modal p {
+                margin-bottom: 20px;
+            }
+
+            .confirmation-modal button {
+                padding: 5px 10px;
+                margin-right: 10px;
+                cursor: pointer;
+            }
+
+            .confirmation-modal button.confirm {
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+            }
+
+            .confirmation-modal button.cancel {
+                background-color: #f44336;
+                color: white;
+                border: none;
+            }
+            .attach-container {
+                margin-top: 10px;
+                text-align: center;
+            }
+            
+            .attach-icon {
+                display: inline-block;
+                padding: 8px 16px;
+                background-color: #4CAF50;
+                color: white;
+                font-size: 1rem;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+            
+            .attach-icon:hover {
+                background-color: #45a049;
+            }      
+            .attach-button {
+                position: absolute;
+                bottom: 15px;
+                right: 15px;
+                cursor: pointer;
+                background: rgba(255, 255, 255, 0.7);
+                padding: 5px;
+                border-radius: 50%;
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+            }
+            
+            .attach-button:hover {
+                background: rgba(76, 175, 80, 0.2);
+                transform: scale(1.1);
+            }
+            
+            textarea {
+                padding-right: 40px;
+                width: 100%;
+                padding: 10px;
+                font-size: 1rem;
+                border: 2px solid #ddd;
+                border-radius: 5px;
+                box-sizing: border-box;
+                resize: vertical;
+            }
+            
+            #fileSubmitBtn {
+                background-color: #45a049;
+                opacity: 0.7;
+            }
+            
+            #fileSubmitBtn:not([disabled]) {
+                opacity: 1;
+                background-color: #4CAF50;
+            }
+            
+            #filePreview {
+                transition: all 0.3s ease;
+            }    
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    </head>
+    <body>
+        <div class="chat-button" onclick="openSidebar()">&#9776</div>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Chats</h2>
+                <button class="close-btn" onclick="closeSidebar()">×</button>
+            </div>
+            <div class="sidebar-content">
+                <button onclick="showNewChatModal()">New Chat</button>
+                <ul id="chatList">
+                    
+                </ul>
+            </div>
+        </div>
+ 
+        <div style="position: absolute; top: 10px; right: 10px;">
+            <img id="profileLogo" src="{{ request.session.user.profile_image if request.session.user.profile_image else 'data:image/png;base64,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' }}"  alt="Profile Logo" class="profile-logo" onclick="toggleDropdown()">
+            <div id="dropdown" style="display: none;">
+                <button onclick="window.location.href='/update-profile'">Update Profile</button>
+                <button onclick="showChangeLogoModal()">Change Logo</button>
+                <button onclick="showLogoutConfirmation()">Logout</button>
+            </div>
+        </div>
+    
+        <div class="container">
+            <h1>PASTE YOUR RESPONSE HERE</h1>
+        
+            <form id="questionForm" action="/submit" method="post" onsubmit="return validateForm()">
+                <label for="question"></label><br>
+                <div style="position: relative;">
+                    <textarea id="question" name="question" rows="5" cols="30" required></textarea>
+                    <label for="fileUpload" class="attach-button" title="Attach file">
+                        <span>📎</span>
+                        <input type="file" id="fileUpload" name="file" style="display: none;" 
+                               accept=".pdf,.txt,.doc,.docx" onchange="handleFileSelection()">
+                    </label>
+                </div>
+                <span class="error-message" id="error-message">Please enter a valid question.</span><br>
+ 
+                <div id="filePreview" style="margin-top: 10px; display: none;">
+                    <div style="display: flex; align-items: center; gap: 10px; background: #f5f5f5; padding: 8px; border-radius: 5px;">
+                        <span id="fileNameDisplay" style="font-weight: bold; color: #4CAF50;"></span>
+                        <button type="button" onclick="removeFile()" style="background: none; border: none; color: #f44336; cursor: pointer;" title="Remove file">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="submit">Submit Text</button>
+                    <button type="button" onclick="submitFile()" id="fileSubmitBtn" disabled>Submit File</button>
+                </div>
+            </form>
+
+            <div id="fileAnswer" style="margin-top: 20px;"></div>
+        </div>
+        <div id="similarFilesResults" style="margin-top: 20px; display: none;">
+            <h3>Similar Files:</h3>
+            <div id="similarFilesList"></div>
+        </div>
+    
+        <div id="logoutModal" class="modal">
+            <div class="modal-content">
+                <p>Are you sure you want to logout?</p>
+                <button onclick="logout()">Yes</button>
+                <button class="cancel" onclick="closeModal()">No</button>
+            </div>
+        </div>
+
+        <div id="changeLogoModal" class="modal">
+            <div class="modal-content">
+                <p>Upload and crop your profile picture:</p>
+                <input type="file" id="logoUpload" accept="image/*">
+                <div id="imagePreview" style="margin: 20px 0; display: none;">
+                    <img id="cropperImage" src="#" alt="Preview" style="max-width: 100%;">
+                </div>
+                <button onclick="uploadLogo()">Upload</button>
+                <button class="cancel" onclick="closeChangeLogoModal()">Cancel</button>
+            </div>
+        </div>
+
+        <div id="newChatModal" class="modal">
+            <div class="modal-content">
+                <p>Enter a name for your new chat:</p>
+                <input type="text" id="chatNameInput" placeholder="Chat Name">
+                <button onclick="createNewChat()">Create</button>
+                <button class="cancel" onclick="closeNewChatModal()">Cancel</button>
+            </div>
+        </div>
+
+        <div id="updateChatModal" class="modal">
+            <div class="modal-content">
+                <p>Enter a new name for the chat:</p>
+                <input type="text" id="newChatNameInput" placeholder="New Chat Name">
+                <button onclick="updateChatName()">Update</button>
+                <button class="cancel" onclick="closeUpdateChatModal()">Cancel</button>
+            </div>
+        </div>
+
+        <div id="confirmationModal" class="confirmation-modal">
+            <p>Do you really want to delete this chat?</p>
+            <button class="confirm" onclick="confirmDelete()">Yes</button>
+            <button class="cancel" onclick="closeConfirmationModal()">No</button>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+        <script>
+            let cropper;
+            let currentChatId;
+
+            async function fetchChats() {
+                const response = await fetch("/get-chats");
+                const data = await response.json();
+                if (data.status === "success") {
+                    const chatList = document.getElementById("chatList");
+                    chatList.innerHTML = ""; 
+                    data.chats.forEach(chat => {
+                        const chatItem = document.createElement("li");
+                        chatItem.className = "chat-item";
+                        chatItem.innerHTML = `
+                            <span onclick="openChat(${chat.id}, '${chat.chat_name}')">${chat.chat_name}</span>
+                            <span class="edit-icon" onclick="showEditDropdown(${chat.id}, this)">✏️</span>
+                        `;
+                        chatList.appendChild(chatItem);
+                    });
+                }
+            }
+            
+            function openChat(chatId, chatName) {
+                window.location.href = `/conversation.html?chat_id=${chatId}&chat_name=${encodeURIComponent(chatName)}`;
+            }
+
+            function showEditDropdown(chatId, editIcon) {
+                closeEditDropdown();
+                const dropdown = document.createElement("div");
+                dropdown.className = "edit-dropdown";
+                dropdown.innerHTML = `
+                    <button onclick="showUpdateField(${chatId})">Update</button>
+                    <button onclick="showConfirmationModal(${chatId})">Delete</button>
+                `;
+                const chatItem = editIcon.parentElement;
+                chatItem.appendChild(dropdown);
+                dropdown.style.display = "block";
+            }
+
+            function closeEditDropdown() {
+                const dropdowns = document.querySelectorAll(".edit-dropdown");
+                dropdowns.forEach(dropdown => dropdown.remove());
+            }
+
+            function showUpdateField(chatId) {
+                currentChatId = chatId; 
+                document.getElementById("updateChatModal").style.display = "flex";
+            }
+
+            function closeUpdateChatModal() {
+                document.getElementById("updateChatModal").style.display = "none";
+            }
+
+            async function updateChatName() {
+                const newChatName = document.getElementById("newChatNameInput").value;
+                if (!newChatName || newChatName.trim() === "") {
+                    alert("Please enter a valid chat name.");
+                    return;
+                }
+    
+                const response = await fetch("/update-chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: `chat_id=${currentChatId}&chat_name=${encodeURIComponent(newChatName)}`,
+                });
+    
+                const data = await response.json();
+                if (data.status === "success") {
+                    fetchChats(); 
+                    closeUpdateChatModal(); 
+                } else {
+                    alert("Failed to update chat.");
+                }
+            }
+            function showConfirmationModal(chatId) {
+                currentChatId = chatId;
+                document.getElementById("confirmationModal").style.display = "block";
+            }
+            function closeConfirmationModal() {
+                document.getElementById("confirmationModal").style.display = "none";
+            }
+
+            async function confirmDelete() {
+                const response = await fetch("/delete-chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: `chat_id=${currentChatId}`,
+                });
+
+                const data = await response.json();
+                if (data.status === "success") {
+                    fetchChats(); 
+                } else {
+                    alert("Failed to delete chat.");
+                }
+                closeConfirmationModal();
+            }
+
+            async function createNewChat() {
+                const chatName = document.getElementById("chatNameInput").value;
+                if (chatName.trim() === "") {
+                    alert("Please enter a chat name.");
+                    return;
+                }
+            
+                const response = await fetch("/create-chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: `chat_name=${encodeURIComponent(chatName)}`,
+                });
+            
+                const data = await response.json();
+                if (data.status === "success") {
+                    window.location.href = `/conversation.html?chat_id=${data.chat_id}&chat_name=${encodeURIComponent(chatName)}`;
+                } else {
+                    alert("Failed to create chat.");
+                }
+            }
+
+            window.onload = fetchChats;
+
+            function openSidebar() {
+                document.getElementById("sidebar").classList.add("open");
+            }
+
+            function closeSidebar() {
+                document.getElementById("sidebar").classList.remove("open");
+            }
+            function showNewChatModal() {
+                document.getElementById("newChatModal").style.display = "flex";
+            }
+
+            function closeNewChatModal() {
+                document.getElementById("newChatModal").style.display = "none";
+            }
+
+            function validateForm() {
+                const question = document.getElementById("question").value;
+                if (question.trim() === "") {
+                    document.getElementById("error-message").style.display = "block";
+                    return false;
+                }
+                return true;
+            }
+            function toggleDropdown() {
+                const dropdown = document.getElementById("dropdown");
+                dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+            }
+
+            function showLogoutConfirmation() {
+                document.getElementById("logoutModal").style.display = "flex";
+            }
+
+            function closeModal() {
+                document.getElementById("logoutModal").style.display = "none";
+            }
+
+            function logout() {
+                window.location.href = "/";
+            }
+
+            function showChangeLogoModal() {
+                document.getElementById("changeLogoModal").style.display = "flex";
+            }
+            function closeChangeLogoModal() {
+                document.getElementById("changeLogoModal").style.display = "none";
+                if (cropper) {
+                    cropper.destroy();
+                }
+                document.getElementById("imagePreview").style.display = "none";
+            }
+            document.getElementById("logoUpload").addEventListener("change", function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const imagePreview = document.getElementById("imagePreview");
+                        const cropperImage = document.getElementById("cropperImage");
+                        imagePreview.style.display = "block";
+                        cropperImage.src = e.target.result;
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+                        cropper = new Cropper(cropperImage, {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                            autoCropArea: 1,
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            function uploadLogo() {
+                if (cropper) {
+                    const croppedCanvas = cropper.getCroppedCanvas();
+                    const croppedImage = croppedCanvas.toDataURL("image/jpeg");
+
+                    fetch(croppedImage)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const formData = new FormData();
+                            formData.append("profile_image", blob, "profile.jpg");
+
+                            fetch("/upload-profile-image", {
+                                method: "POST",
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === "success") {
+                                    const profileLogo = document.getElementById("profileLogo");
+                                    profileLogo.src = data.imagePath;
+                                    closeChangeLogoModal();
+                                } else {
+                                    alert("Error uploading image: " + (data.message || "Unknown error"));
+                                }
+                            })
+                            .catch(error => {
+                                console.error("Error:", error);
+                                alert("An error occurred while uploading the image.");
+                            });
+                        });
+                } else {
+                    alert("Please select and crop an image first.");
+                }
+            }
+            document.getElementById('fileUpload').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    alert(`Selected file: ${file.name}`);
+                }
+            });
+
+            function showFileName() {
+                var fileInput = document.getElementById('fileUpload');
+                var fileNameDisplay = document.getElementById('selectedFileName');
+            
+                if (fileInput.files.length > 0) {
+                    fileNameDisplay.textContent = "Selected: " + fileInput.files[0].name;
+                } else {
+                    fileNameDisplay.textContent = "";
+                }
+            }
+            
+            function validateFileUpload() {
+                var fileInput = document.getElementById('fileUpload');
+                if (fileInput.files.length === 0) {
+                    alert("Please select a file before submitting!");
+                    return false;
+                }
+                return true;
+            }
+
+            function showFileName() {
+                var fileInput = document.getElementById('fileUpload');
+                var fileNameDisplay = document.getElementById('selectedFileName');
+            
+                if (fileInput.files.length > 0) {
+                    fileNameDisplay.textContent = "Selected: " + fileInput.files[0].name;
+                } else {
+                    fileNameDisplay.textContent = "";
+                }
+            }
+            
+            function handleFileSelection() {
+                const fileInput = document.getElementById('fileUpload');
+                const filePreview = document.getElementById('filePreview');
+                const fileNameDisplay = document.getElementById('fileNameDisplay');
+                const fileSubmitBtn = document.getElementById('fileSubmitBtn');
+                
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    fileNameDisplay.textContent = file.name;
+                    filePreview.style.display = 'block';
+                    fileSubmitBtn.disabled = false;
+                    
+                    // Optional: Auto-fill the textarea with a prompt about the file
+                    const questionTextarea = document.getElementById('question');
+                    if (!questionTextarea.value.trim()) {
+                        questionTextarea.value = "Please analyze the attached file: " + file.name;
+                    }
+                } else {
+                    filePreview.style.display = 'none';
+                    fileSubmitBtn.disabled = true;
+                }
+            }
+        
+            function removeFile() {
+                const fileInput = document.getElementById('fileUpload');
+                fileInput.value = ''; 
+                handleFileSelection(); 
+ 
+                const questionTextarea = document.getElementById('question');
+                if (questionTextarea.value.includes("Please analyze the attached file:")) {
+                    questionTextarea.value = '';
+                }
+            }
+        
+            async function submitFile() {
+                const fileInput = document.getElementById('fileUpload');
+                if (fileInput.files.length === 0) {
+                    alert("Please select a file first!");
+                    return;
+                }
+        
+                const formData = new FormData();
+                formData.append("file", fileInput.files[0]);
+        
+                try {
+                    const response = await fetch("/upload-pdf-query", {
+                        method: "POST",
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error("File upload failed");
+                    }
+                    
+                    const data = await response.json();
+                    sessionStorage.setItem('fileResponse', JSON.stringify({
+                        formatted_output: data.formatted_output,
+                        structured_data: data.structured_data
+                    }));
+                    
+                    window.location.href = "/file-answer.html";
+                } catch (error) {
+                    console.error(error);
+                    alert("Error uploading file: " + error.message);
+                }
+            }
+        
+            async function searchSimilarFiles(query) {
+                try {
+                    const response = await fetch("/search-similar-files", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        body: `question=${encodeURIComponent(query)}`
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.results && data.results.documents.length > 0) {
+                        const resultsContainer = document.getElementById('similarFilesResults');
+                        const listContainer = document.getElementById('similarFilesList');
+                        
+                        listContainer.innerHTML = '';
+                        data.results.documents.forEach((doc, index) => {
+                            const metadata = data.results.metadatas[index][0];
+                            const div = document.createElement('div');
+                            div.className = 'similar-file';
+                            div.innerHTML = `
+                                <h4>${metadata.filename}</h4>
+                                <p>${doc.substring(0, 150)}...</p>
+                                <small>Uploaded: ${new Date(metadata.upload_date).toLocaleString()}</small>
+                            `;
+                            listContainer.appendChild(div);
+                        });
+                        
+                        resultsContainer.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error("Error searching similar files:", error);
+                }
+            }
+            
+            function submitFollowUpQuestion() {
+                const question = document.getElementById("followUpQuestion").value;
+                if (question.trim() === "") {
+                    alert("Please enter a follow-up question.");
+                    return;
+                }
+
+                alert("Follow-up question submitted: " + question);
+            }
+        </script>
+    </body>
+</html>
